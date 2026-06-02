@@ -19,6 +19,18 @@
     alerts: [...data.alerts],
     activeRole: 'spectator'
   };
+  const DEMO_STEP_DELAY_MS = 1800;
+  const CROWD_DELTA_RANGE = 18;
+  const MIN_CROWD_COUNT = 0;
+  const RANDOM_CENTER_OFFSET = 0.5;
+  const RISK_DELTA_RANGE = 7;
+  const RISK_DELTA_BIAS = 0.4;
+  const MIN_RISK_LEVEL = 8;
+  const MAX_RISK_LEVEL = 96;
+  const MIN_BATTERY_LEVEL = 20;
+  const MAX_ALERT_HISTORY = 5;
+  const BATTERY_DRAIN_RATE = 0.15;
+  const ALERT_GENERATION_THRESHOLD = 0.72;
 
   const t = (k) => data.translations[state.lang][k] || k;
   const isRoute = (r) => location.hash.startsWith(r);
@@ -74,7 +86,7 @@
           <h2>${t('roleSelect')}</h2>
           <div class="role-cards">
             ${data.roles.map((r) => `<a class="role" href="${r.route}" aria-label="Choose ${r.id} role" style="box-shadow:0 0 24px color-mix(in srgb, ${r.color}, transparent 75%)">
-              <div><strong>${t(r.id)}</strong><p class="muted">Role-focused emergency workflow</p></div><button class="cta" aria-hidden="true">→</button>
+              <div><strong>${r.icon} ${t(r.id)}</strong><p class="muted">Role-focused emergency workflow</p></div><button class="cta" aria-hidden="true">→</button>
             </a>`).join('')}
           </div>
         </article>
@@ -206,7 +218,7 @@
       <section class="card"><h3>Command Center Chat (mock)</h3>
         <p><strong>HQ:</strong> Confirm crowd split started?</p>
         <p><strong>You:</strong> Yes, moving barriers now.</p>
-        <input aria-label="chat input" placeholder="Type update" />
+        <input type="text" aria-label="chat input" placeholder="Type update" />
       </section>
       ${wearableCard()}
     </div>`;
@@ -331,11 +343,11 @@
     if (state.scenarioRunning) return;
     state.scenarioRunning = true;
     const steps = [1, 2, 3, 4, 5, 6, 7, 8];
-    steps.forEach((s, i) => setTimeout(() => setDemoState(s), i * 1800));
+    steps.forEach((s, i) => setTimeout(() => setDemoState(s), i * DEMO_STEP_DELAY_MS));
     setTimeout(() => {
       state.scenarioRunning = false;
       render();
-    }, steps.length * 1800 + 300);
+    }, steps.length * DEMO_STEP_DELAY_MS + 300);
   }
 
   function bindEvents() {
@@ -369,18 +381,18 @@
     bindEvents();
   }
 
-  setInterval(() => {
-    state.crowd += Math.round((Math.random() - 0.5) * 18);
-    state.risk = Math.max(8, Math.min(96, state.risk + Math.round((Math.random() - 0.4) * 7)));
-    state.wearable.battery = Math.max(20, state.wearable.battery - 0.15);
+  const liveUpdateInterval = setInterval(() => {
+    state.crowd = Math.max(MIN_CROWD_COUNT, state.crowd + Math.round((Math.random() - RANDOM_CENTER_OFFSET) * CROWD_DELTA_RANGE));
+    state.risk = Math.max(MIN_RISK_LEVEL, Math.min(MAX_RISK_LEVEL, state.risk + Math.round((Math.random() - RISK_DELTA_BIAS) * RISK_DELTA_RANGE)));
+    state.wearable.battery = Math.max(MIN_BATTERY_LEVEL, state.wearable.battery - BATTERY_DRAIN_RATE);
     state.routeStatus = state.risk > 65 ? 'Recalculated' : 'Stable';
-    if (Math.random() > 0.72) {
-      state.alerts = [{ type: 'warning', msg: 'Dynamic flow update near zone C3', zone: 'C3' }, ...state.alerts].slice(0, 5);
+    if (Math.random() > ALERT_GENERATION_THRESHOLD) {
+      state.alerts = [{ type: 'warning', msg: 'Dynamic flow update near zone C3', zone: 'C3' }, ...state.alerts].slice(0, MAX_ALERT_HISTORY);
     }
     if (!state.scenarioRunning) render();
   }, 5000);
 
   window.addEventListener('hashchange', render);
-  if (!location.hash) location.hash = '#/login';
+  window.addEventListener('beforeunload', () => clearInterval(liveUpdateInterval));
   render();
 })();

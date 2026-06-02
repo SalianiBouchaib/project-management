@@ -20,8 +20,28 @@ body {
   color: var(--text);
   background: radial-gradient(circle at 20% -10%, #1c2d58 0, transparent 40%), var(--bg);
 }
-.skip-link { position: absolute; left: -999px; top: -999px; }
-.skip-link:focus { left: 16px; top: 16px; background: #fff; color: #000; padding: 8px; z-index: 1000; }
+.skip-link {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+.skip-link:focus {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  width: auto;
+  height: auto;
+  clip: auto;
+  overflow: visible;
+  white-space: normal;
+  background: #fff;
+  color: #000;
+  padding: 8px;
+  z-index: 1000;
+}
 .app-shell { min-height: 100vh; display: grid; grid-template-rows: auto 1fr; }
 .topbar {
   display: flex; align-items: center; justify-content: space-between;
